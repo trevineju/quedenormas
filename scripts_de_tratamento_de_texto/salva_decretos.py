@@ -135,14 +135,14 @@ def collect_norma_text(url):
     
     return normas
 
-def save_txt(norma, nome_arquivo):
+def save_txt(norma, caminho, nome_arquivo):
     text_file = open(f"./dados/3-decretos/{nome_arquivo}.txt", "w")
     text_file.write(norma)
     text_file.close()
 
-def recorta_textos(nome_arquivo):
+def recorta_textos(caminho, nome_arquivo):
     nome_arquivo = f"{nome_arquivo}_verificado" 
-    dados = read(nome_arquivo)
+    dados = read(caminho, nome_arquivo)
 
     for i in range(len(dados)):
         if dados[i]["STATUS"] == status:

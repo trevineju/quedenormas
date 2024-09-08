@@ -14,7 +14,7 @@ def segmenta(texto):
             dici[str(i)] = "art" + aux_list[i]    
     return dici
 
-def save_json(dados, path, nome_arquivo):
+def save_json(dados, path, caminho, nome_arquivo):
     file = open(f"{path}/dados/4-segmentos_de_decretos/{nome_arquivo}.json", "w", encoding="utf-8")
     json.dump(dados, file, indent=4)
     file.close()

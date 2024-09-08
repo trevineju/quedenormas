@@ -1,29 +1,34 @@
 import criterios_de_pesquisa as cp
-import scripts_de_coleta.intervalos_de_cobertura as intervalos_de_cobertura
-import scripts_de_coleta.pesquisa_termos as pesquisa_termos
-import scripts_de_coleta.filtros as filtros
-import scripts_de_coleta.compara_excertos as compara_excertos
+
+import scripts_de_coleta.cobertura as cobertura
+import scripts_de_coleta.coleta as coleta
+
+import scripts_de_marcacoes.filtros as filtros
+import scripts_de_marcacoes.excertos as excertos
 
 import scripts_de_tratamento_de_texto.salva_decretos as salva_decretos
 import scripts_de_tratamento_de_texto.segmenta_artigos as segmenta_artigos
 
+import os
 from datetime import date
-
 today = date.today()
 
-if cp.filtro:
-    nome_arquivo = f"{today}_{cp.arquivo}_{cp.inicio}-{cp.fim}"
-else: 
-    nome_arquivo = f"{today}_{cp.arquivo}"
+for p in cp.lista_de_pesquisas:
+    dir_raw_data = f'./dados/1-resultados/{p["dir-resultados"]}'
+    base_nome = f'{today}_{p["nome-arquivo"]}_{p["inicio"]}-{p["fim"]}'
+    resultados_brutos = f"{base_nome}_dados-brutos"
+    cobertura_resultados = f"{base_nome}_cobertura-no-qd"
+    resultados_filtrados = f"{base_nome}_filtros"
+    resultados_comparados = f"{base_nome}_comparacoes"
+    
+    if not os.path.exists(dir_raw_data): os.mkdir(dir_raw_data)
+  
+    coleta.resultados(p["busca"], p["inicio"], p["fim"], dir_raw_data, resultados_brutos)   
+    if cp.salvar_cobertura: cobertura.municipios_com_resultados(dir_raw_data, resultados_brutos, cobertura_resultados)
+    filtros.aplica(p["termos-de-busca"], p["incluir-diretivas"], cp.diretivas, p["palavras-filtro"], dir_raw_data, resultados_brutos, resultados_filtrados)
+    excertos.compara(dir_raw_data, resultados_filtrados, resultados_comparados)
 
-pesquisa_termos.buscas(cp.pesquisas, cp.filtro, cp.inicio, cp.fim, nome_arquivo)
-filtros.aplica(cp.filtro_lexical, nome_arquivo)
-compara_excertos.executa(nome_arquivo)
-
-if cp.salvar_intervalos_de_cobertura:
-    intervalos_de_cobertura.coleta(nome_arquivo)
-
-salva_decretos.recorta_textos(nome_arquivo)
-segmenta_artigos.main()
+# salva_decretos.recorta_textos(caminho, nome_arquivo)
+# segmenta_artigos.main()
 
 
