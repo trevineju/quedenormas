@@ -1,7 +1,8 @@
-import csv
 import requests
-from unidecode import unidecode
+import os
 import re
+import json
+import scripts_auxiliares.aux as aux
 
 status = "aderente"
 
@@ -22,30 +23,6 @@ logica é:
 4. adicionar uma margem de erro depois de 'entra em vigor' visto que o texto não termina ali oficialmente
 5. 'normalizar' os resultados visto que podem estar contidos um nos outros
 """
-
-def read(file_path):
-    dados = []
-
-    with open(f"./dados/2-resultados_analisados/{file_path}.csv", encoding="utf-8") as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            dados.append(row)
-
-    return dados
-
-def sanitiza(texto):
-    texto = unidecode(texto.lower())
-
-    # remove "-\n"
-    texto = texto.replace("-\n", "")
-
-    # substitui "\n" por blankspace
-    texto = texto.replace("\n", " ")
-
-    while "  " in texto:
-        texto = texto.replace("  ", " ")
-
-    return texto
 
 def get_indexes(search_text, response):
 
@@ -108,7 +85,7 @@ def normaliza_cortes(lista_de_cortes):
     return lista_atualizada
 
 def collect_norma_text(url):
-    response = sanitiza(requests.get(url).text)
+    response = aux.sanitiza(requests.get(url).text)
     print("\n\ntentando caso de ", url)
 
     i_normas = get_indexes(nlei, response)
@@ -136,19 +113,34 @@ def collect_norma_text(url):
     return normas
 
 def save_txt(norma, caminho, nome_arquivo):
-    text_file = open(f"./dados/3-decretos/{nome_arquivo}.txt", "w")
+    text_file = open(f"{caminho}/{nome_arquivo}.txt", "w")
     text_file.write(norma)
     text_file.close()
 
-def recorta_textos(caminho, nome_arquivo):
-    nome_arquivo = f"{nome_arquivo}_verificado" 
-    dados = read(caminho, nome_arquivo)
+def salva(caminho_entrada, arq_entrada, caminho_saida):
+    dados = aux.read_data(caminho_entrada, arq_entrada)
 
     for i in range(len(dados)):
         if dados[i]["STATUS"] == status:
             normas = collect_norma_text(dados[i]["txt_url"])
             for n in range(len(normas)):
-                save_txt(normas[n], f'{dados[i]["date"]}_{dados[i]["territory_id"]}_{dados[i]["territory_name"]}_lei-de-governo-digital_{n}')
+                save_txt(normas[n], caminho_saida, f'{dados[i]["date"]}_{dados[i]["state_code"]}_{dados[i]["territory_name"].replace(" ", "-")}_lei-de-governo-digital_{n}')
     
     print(casos_pendentes)
 
+def separa_artigos(texto):
+    dici = {}
+    aux_list = texto.split("art.")
+    for i in range(len(aux_list)):
+        if i == 0:
+            dici[i] = aux_list[i]
+        else:
+            dici[i] = "art" + aux_list[i]    
+    return dici
+
+def segmenta(entrada_dir, saida_dir):    
+    for file in aux.get_all_files(entrada_dir):
+        with open(file, 'r') as input_file:
+            conteudo = input_file.read()
+            dados = separa_artigos(conteudo)
+            aux.save_json(dados, saida_dir, file.name[:-4])

@@ -73,43 +73,43 @@ lista_de_pesquisas = [
         ],
     },
 
-    {
-        "dir-resultados": "lei_acesso_informacao",
-        "nome-arquivo": "lai",          
-        "busca": '"12.527"', #'"12527" "12.527" "LAI" "acesso informação"~2 "acesso informacao"~2 "acesso informaçao"~2 "acesso informacão"~2',
-        "inicio": "2024-01-01",
-        "fim": hoje,        
-        "termos-de-busca": [
-            "12527", 
-            "12.527", 
-            "lai", 
-            "acesso a informacao"
-        ],
-        "incluir-diretivas": True,
-        "palavras-filtro":  [
-        ]
-    },
+    # {
+    #     "dir-resultados": "lei_acesso_informacao",
+    #     "nome-arquivo": "lai",          
+    #     "busca": '"12.527"', #'"12527" "12.527" "LAI" "acesso informação"~2 "acesso informacao"~2 "acesso informaçao"~2 "acesso informacão"~2',
+    #     "inicio": "2024-01-01",
+    #     "fim": hoje,        
+    #     "termos-de-busca": [
+    #         "12527", 
+    #         "12.527", 
+    #         "lai", 
+    #         "acesso a informacao"
+    #     ],
+    #     "incluir-diretivas": True,
+    #     "palavras-filtro":  [
+    #     ]
+    # },
 
-    {
-        "dir-resultados": "lei_protecao_de_dados",
-        "nome-arquivo": "lgpd",
-        "busca": '"13.709"', #'"13709" "13.709" "LGPD" "proteção dados"~2 "protecao dados"~2 "proteçao dados"~2 "protecão dados"~2',
-        "inicio": "2024-01-01",
-        "fim": hoje,        
-        "termos-de-busca": [
-            "13709", 
-            "13.709",
-            "lgpd",
-            "protecao",
-        ],
-        "incluir-diretivas": True,
-        "palavras-filtro":  [
-            "complience", 
-            "compliance", 
-            "privacidade",
-            "encarregad"
-        ],
-    }, 
+    # {
+    #     "dir-resultados": "lei_protecao_de_dados",
+    #     "nome-arquivo": "lgpd",
+    #     "busca": '"13.709"', #'"13709" "13.709" "LGPD" "proteção dados"~2 "protecao dados"~2 "proteçao dados"~2 "protecão dados"~2',
+    #     "inicio": "2024-01-01",
+    #     "fim": hoje,        
+    #     "termos-de-busca": [
+    #         "13709", 
+    #         "13.709",
+    #         "lgpd",
+    #         "protecao",
+    #     ],
+    #     "incluir-diretivas": True,
+    #     "palavras-filtro":  [
+    #         "complience", 
+    #         "compliance", 
+    #         "privacidade",
+    #         "encarregad"
+    #     ],
+    # }, 
 ]
 
 
