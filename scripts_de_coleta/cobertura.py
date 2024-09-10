@@ -36,14 +36,15 @@ def intervalo_cobertura(codeslist):
         # ultima edicao 
         params["sort_by"] = "descending_date"
         edicao_n = api.get_response(api.request_url(params))
-        
+
         dados.append({
             "ibgecode": ibgecode,
             "nome": edicao_n["gazettes"][0]["territory_name"],
             "uf": edicao_n["gazettes"][0]["state_code"],
             "data_inicial": edicao_1["gazettes"][0]["date"],
             "data_final": edicao_n["gazettes"][0]["date"],
-            "total": edicao_n["total_gazettes"]
+            "total": edicao_n["total_gazettes"],
+            "coleta_mais_antiga": edicao_1["gazettes"][0]["scraped_at"]
         })
 
     return dados
