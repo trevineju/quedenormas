@@ -6,12 +6,13 @@ from itertools import islice
 import scripts_auxiliares.aux as aux
 import scripts_auxiliares.acessa_api as api
 
-def separates_excerpts(resultados):
+def separates_excerpts(resultados, params):
     print("\nOrganizando resultados obtidos")
     print(f"ANTES  | Quantidade de resultados: {len(resultados)}")
 
     resultados_unicos = []
     for resultado in resultados:
+        resultado["chave-busca"] = params["querystring"]
         for excerto in resultado['excerpts']:
             excerto_unico = resultado.copy()
             excerto_unico['excerpts'] = excerto
@@ -58,7 +59,7 @@ def collect_results(params):
             response = api.get_response(api.request_url(params))
             lista_de_resultados.extend(response['gazettes'])
 
-    return separates_excerpts(lista_de_resultados)
+    return separates_excerpts(lista_de_resultados, params)
 
 def resultados(search_key, inicio, fim, caminho, nome_arquivo):  
     api_params = api.params

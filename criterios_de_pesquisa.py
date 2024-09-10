@@ -19,7 +19,7 @@ diretivas = [
     "regulamenta", "regulamento", "regulamentar",       
     "cria", "crio", 
     "determina", "determino",
-    "institui",         #institui, instituida
+    "institui", "instituida",
     "decret",           #decreta, decreto
     "atribu",           #atribui, atribuo 
     "aprov",            #aprova, aprovo
@@ -51,8 +51,8 @@ lista_de_pesquisas = [
     {
         "dir-resultados": "lei_governo_digital",
         "nome-arquivo": "leigovdigital",
-        "busca": '"14.129"', #'"14129" "14.129" "governo digital"~2',
-        "inicio": "2024-01-01", #"2021-03-29",
+        "busca": '"14129" "14.129" "governo digital"~2',
+        "inicio": "2021-03-29",
         "fim": hoje,
         "termos-de-busca": [
             "14129", 
@@ -70,7 +70,20 @@ lista_de_pesquisas = [
             "tic", "pdtic",
             "gratuidade",    # costuma aparecer em uma das redações do decreto
             "escolavirtual", # muita menção a curso da enap nos excertos 
+            "digital",
         ],
+        "descartes": [
+            [("s", "escolavirtual")],
+            [("s", "14129"), ("n", "governo digital")],
+            [("s", "14129"), ("n", "federal")],
+            [("s", "14.129"), ("n", "digital")],
+        ],
+        "interesses": [
+            [("s", "14.129"), ("s", "regulament")],
+            [("s", "14129"), ("s", "regulament")],
+            [("s", "governo digital"), ("s", "regulament")],
+            [("s", "gratuidade")],
+        ]
     },
 
     # {

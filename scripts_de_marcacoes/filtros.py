@@ -12,9 +12,8 @@ def confere_palavras(palavra, texto):
 
 def marca_filtros(resultados, lista_filtros):
     for filtro in lista_filtros:
-        filtro = aux.sanitiza_e_concatena(filtro)
         for i in range(len(resultados)):
-            resultados[i][filtro] = confere_palavras(filtro, resultados[i]['no_whitespaces'])
+            resultados[i][filtro] = confere_palavras(aux.sanitiza_e_concatena(filtro), resultados[i]['no_whitespaces'])
  
     return resultados
 

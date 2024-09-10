@@ -36,6 +36,7 @@ def marca_casos_repetidos(dados):
                         dados = inclui_marcacao('txt_mun', dados, i, y)
                 else: # municipios diferentes
                     dados = inclui_marcacao('txt', dados, i, y)
+
     return dados
 
 def inclui_marcacao(coluna, dados, i, y):
@@ -45,11 +46,49 @@ def inclui_marcacao(coluna, dados, i, y):
     dados[i][coluna] = id
     dados[y][coluna] = id
 
-    return dados   
+    return dados
 
-def compara(caminho, arq_entrada, arq_saida): 
+def aplica_criterios(dados, criterios, mensagem):
+    for i in range(len(dados)):
+        if "status" not in list(dados[i].keys()): dados[i]["status"] = ""
+
+        for config in criterios:
+            if deve_ser_marcado(dados[i], config):
+                dados[i]["status"] = mensagem
+
+    return dados
+
+def deve_ser_marcado(caso, config):
+    descarte = True    
+    for criterio in config:
+        descarte = descarte and criterio[0] == caso[criterio[1]]
+    return descarte
+
+def marca_urls_iguais(dados):
+    for i in range(len(dados)-1):
+        if "url_repetida" not in list(dados[i].keys()): dados[i]["url_repetida"] = ""
+
+        i_url = dados[i]["txt_url"]
+        for y in range(i+1, len(dados)):
+            y_url = dados[y]["txt_url"]
+
+            if i_url == y_url:
+                print(dados[i]["clear_excerpt"])
+                print()
+                print(dados[y]["clear_excerpt"])
+                breakpoint()
+    
+    return dados
+
+def compara(caminho, arq_entrada, arq_saida, descartes, interesses): 
     dados = aux.read_data(caminho, arq_entrada)
     dados = recorta_trechos(dados)
-    dados = marca_casos_repetidos(dados)
+    dados = marca_casos_repetidos(dados)    
+
+    dados = aplica_criterios(dados, interesses, "aderente_automatizado")    
+    dados = aplica_criterios(dados, descartes, "descarte_automatizado")
+
+    dados = marca_urls_iguais(dados)
+
     aux.save_data(dados, caminho, arq_saida)
 

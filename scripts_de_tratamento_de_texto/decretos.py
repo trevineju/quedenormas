@@ -1,116 +1,72 @@
 import requests
-import os
 import re
-import json
 import scripts_auxiliares.aux as aux
 
 status = "aderente"
 
-nlei = "14.129"
-marcacao_inicio = "d\s*e\s*c\s*r\s*e\s*t\s*o"
-# tem casos que não é decreto, e sim "resolução"
-marcacao_fim = "e\s*n\s*t\s*r\s*a\s*e\s*m\s*v\s*i\s*g\s*o\s*r"
+marcacao_inicio_1 = "decreto"
+marcacao_inicio_2 = "resolucao"
+marcacao_meio = "regulament*14.129"
+marcacao_fim = "entra em vigor"
 
-desloc_padrao = 450
+desloc_padrao = 250
 
 casos_pendentes = []
 
-"""
-logica é:
-1. achar uma ocorrencia de nlei
-2. procurar pela palavra 'decreto' que aparece imediatamente antes de um resultado de nlei
-3. procurar pela expressao 'entra em vigor' que aparece imediatamente depois de um resultado de nlei
-4. adicionar uma margem de erro depois de 'entra em vigor' visto que o texto não termina ali oficialmente
-5. 'normalizar' os resultados visto que podem estar contidos um nos outros
-"""
+def modifica_regex(texto):
+    final = ""
+    um_espaco_talvez = "\s?"
+    qualquer = ".*"
 
-def get_indexes(search_text, response):
-
-    ocorrencias = re.findall(search_text, response, re.IGNORECASE)
-    ocorrencias_indexes = []
+    for i in range(len(texto)):
+        if texto[i] == ".":
+            final += "\."
+        elif texto[i] == " ":
+            pass
+        elif texto[i] == "*":
+            final += qualquer
+        else:
+            final += texto[i] + um_espaco_talvez
     
-    start = 0   
-    for i in range(len(ocorrencias)):
-        index = response.find(ocorrencias[i], start)
-        ocorrencias_indexes.append(index)
-        start = index + len(ocorrencias[i])
-    
-    return ocorrencias_indexes
+    return final
 
-def get_ultima_ocorrencia_antes(ref, lista):
-    aux = [0]
-    for i in range(len(lista)):
-        if lista[i] < ref:
-            aux.append(lista[i])
-    return aux[-1]
+def cria_regex():
+    marc_inicio_1 = modifica_regex(marcacao_inicio_1)
+    marc_inicio_2 = modifica_regex(marcacao_inicio_2)
+    marc_meio = modifica_regex(marcacao_meio)
+    marc_fim = modifica_regex(marcacao_fim)
 
-def get_primeira_ocorrencia_depois(ref, lista):
-    for i in range(len(lista)):
-        if ref < lista[i]:
-            return lista[i]
+    regex = f"({marc_inicio_1}|{marc_inicio_2}).+{marc_meio}(?:(?!{marc_meio}).)*?{marc_fim}"
+    return regex
 
-def organiza_cortes(i_normas, i_inicios, i_fins):
-    cortes = []
+def find_recursivo(regex, texto, lado, qnt): 
+    if lado == "esq":
+        resultado = re.search(regex, texto[qnt:], re.IGNORECASE)
 
-    for i in range(len(i_normas)):
-        inicio = get_ultima_ocorrencia_antes(i_normas[i], i_inicios)
-        fim = get_primeira_ocorrencia_depois(i_normas[i], i_fins)
-        fim += desloc_padrao
-        cortes.append((inicio, fim))
+    if lado == "dir":
+        resultado = re.search(regex, texto[:-qnt], re.IGNORECASE)
 
-    return cortes
+    if resultado is None:
+        return texto
 
-def normaliza_cortes(lista_de_cortes):
-    casos = len(lista_de_cortes)
-    i_dos_descartes = set()
-    lista_atualizada = []
-
-    for i in range(casos-1):
-        ref = lista_de_cortes[i]        
-
-        for y in range(i+1, casos):
-            comparado = lista_de_cortes[y]
-
-            # comparado está contido em ref
-            if ref[0] <= comparado[0] <= ref[1] and ref[0] <= comparado[1] <= ref[1]:
-                i_dos_descartes.add(y)
-
-            # algum grau de intersecção, porém não contido/contém
-            # todo
-    
-    for c in range(casos):
-        if c not in i_dos_descartes:
-            lista_atualizada.append(lista_de_cortes[c])
-
-    return lista_atualizada
+    return find_recursivo(regex, resultado.group(), lado, qnt)    
 
 def collect_norma_text(url):
     response = aux.sanitiza(requests.get(url).text)
-    print("\n\ntentando caso de ", url)
 
-    i_normas = get_indexes(nlei, response)
-    i_inicios = get_indexes(marcacao_inicio, response)
-    i_fins = get_indexes(marcacao_fim, response)
-
-    print("quantidade de normas: ", i_normas)
-    print("quantidade de comecos: ", i_inicios)
-    print("quantidade de fins: ", i_fins)
-
-    if len(i_normas)==0 or len(i_inicios)==0 or len(i_fins)==0:
-        print("\n\nUm caso foi pulado!!!")
-        casos_pendentes.append(url)
-        return []
-        
-    lista_de_cortes = organiza_cortes(i_normas, i_inicios, i_fins)
-    print("lista de cortes antes: ", lista_de_cortes)
-    lista_de_cortes = normaliza_cortes(lista_de_cortes)
-    print("lista de cortes depois: ", lista_de_cortes)
-
-    normas = []
-    for corte in lista_de_cortes:
-        normas.append(response[corte[0]:corte[1]])   
+    regex_completa = cria_regex()
+    reduz_a_esquerda = find_recursivo(regex_completa, response, "esq", 2)
+    reduz_a_direita = find_recursivo(regex_completa, reduz_a_esquerda, "dir", 2)
     
-    return normas
+    index_inicial = max(0, response.find(reduz_a_direita) - desloc_padrao)
+    index_final = min(index_inicial + len(reduz_a_direita) + desloc_padrao, len(response))
+    norma = response[index_inicial:index_final]
+
+    if response == norma:
+        return None
+
+    return norma
+ 
 
 def save_txt(norma, caminho, nome_arquivo):
     text_file = open(f"{caminho}/{nome_arquivo}.txt", "w")
@@ -122,11 +78,13 @@ def salva(caminho_entrada, arq_entrada, caminho_saida):
 
     for i in range(len(dados)):
         if dados[i]["STATUS"] == status:
-            normas = collect_norma_text(dados[i]["txt_url"])
-            for n in range(len(normas)):
-                save_txt(normas[n], caminho_saida, f'{dados[i]["date"]}_{dados[i]["state_code"]}_{dados[i]["territory_name"].replace(" ", "-")}_lei-de-governo-digital_{n}')
+            norma = collect_norma_text(dados[i]["txt_url"])
+            if norma:
+                save_txt(norma, caminho_saida, f'{dados[i]["date"]}_{dados[i]["state_code"]}_{dados[i]["territory_name"].replace(" ", "-")}_lei-de-governo-digital')
+            else:
+                casos_pendentes.append(dados[i]["txt_url"])
     
-    print(casos_pendentes)
+    print("CASOS SEM MATCH: \n", casos_pendentes)
 
 def separa_artigos(texto):
     dici = {}
